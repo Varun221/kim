@@ -293,11 +293,11 @@ def make_dirs(dirs):
 
 if __name__ == '__main__':
     print('=' * 80)
-    print('Preprocessing WordNet prolog and SNLI dataset')
+    print('Preprocessing WordNet prolog and Infotabs dataset')
     print('=' * 80)
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    dst_dir = os.path.join(base_dir, 'sequence_and_features')
-    snli_dir = os.path.join(base_dir, 'snli/snli_1.0')
+    dst_dir = os.path.join(base_dir, 'Infotabs')
+    # snli_dir = os.path.join(base_dir, 'snli/snli_1.0')
     wordnet_dir = os.path.join(base_dir, 'wordnet/prolog')
     make_dirs([dst_dir])
 
@@ -345,24 +345,24 @@ if __name__ == '__main__':
             f.write(k + ' ' + ' '.join(map(str,v.tolist())) + '\n')
 
     print('4. obtain train/dev/test dataset\n')
-    build_sequence(os.path.join(snli_dir, 'snli_1.0_dev.txt'), dst_dir)
-    build_sequence(os.path.join(snli_dir, 'snli_1.0_test.txt'), dst_dir)
-    build_sequence(os.path.join(snli_dir, 'snli_1.0_train.txt'), dst_dir)
+    # build_sequence(os.path.join(snli_dir, 'snli_1.0_dev.txt'), dst_dir)
+    # build_sequence(os.path.join(snli_dir, 'snli_1.0_test.txt'), dst_dir)
+    # build_sequence(os.path.join(snli_dir, 'snli_1.0_train.txt'), dst_dir)
 
     print('5. obtain lemma format for train/dev/test dataset\n')
-    CoreNLP(os.path.join(dst_dir, 'premise_snli_1.0_train.txt'))
-    CoreNLP(os.path.join(dst_dir, 'hypothesis_snli_1.0_train.txt'))
-    CoreNLP(os.path.join(dst_dir, 'premise_snli_1.0_dev.txt'))
-    CoreNLP(os.path.join(dst_dir, 'hypothesis_snli_1.0_dev.txt'))
-    CoreNLP(os.path.join(dst_dir, 'premise_snli_1.0_test.txt'))
-    CoreNLP(os.path.join(dst_dir, 'hypothesis_snli_1.0_test.txt'))
+    CoreNLP(os.path.join(dst_dir, 'premise_infotabs_train.txt'))
+    CoreNLP(os.path.join(dst_dir, 'hypothesis_infotabs_train.txt'))
+    CoreNLP(os.path.join(dst_dir, 'premise_infotabs_dev.txt'))
+    CoreNLP(os.path.join(dst_dir, 'hypothesis_infotabs_dev.txt'))
+    CoreNLP(os.path.join(dst_dir, 'premise_infotabs_test.txt'))
+    CoreNLP(os.path.join(dst_dir, 'hypothesis_infotabs_test.txt'))
 
     print('6. build dictionary for word sequence and lemma sequence from training set\n')
-    build_dictionary([os.path.join(dst_dir, 'premise_snli_1.0_train_token.txt'), 
-                      os.path.join(dst_dir, 'hypothesis_snli_1.0_train_token.txt')], 
+    build_dictionary([os.path.join(dst_dir, 'premise_infotabs_train_token.txt'), 
+                      os.path.join(dst_dir, 'hypothesis_infotabs_train_token.txt')], 
                       os.path.join(dst_dir, 'vocab_cased.pkl'), wordnet=word_id_num, remove_phrase=True)
-    build_dictionary([os.path.join(dst_dir, 'premise_snli_1.0_train_lemma.txt'), 
-                      os.path.join(dst_dir, 'hypothesis_snli_1.0_train_lemma.txt')], 
+    build_dictionary([os.path.join(dst_dir, 'premise_infotabs_train_lemma.txt'), 
+                      os.path.join(dst_dir, 'hypothesis_infotabs_train_lemma.txt')], 
                       os.path.join(dst_dir, 'vocab_cased_lemma.pkl'), wordnet=word_id_num, remove_phrase=True)
 
     print('7. convert to pkl format based on lemma dictionary\n')
