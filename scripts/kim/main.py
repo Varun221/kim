@@ -5,7 +5,7 @@ import theano
 import theano.tensor as tensor
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 
-import cPickle as pkl
+import pickle as pkl
 import pdb
 import numpy
 import copy
@@ -69,7 +69,7 @@ def init_tparams(params):
     tparams = OrderedDict()
     for kk, pp in params.iteritems():
         tparams[kk] = theano.shared(params[kk], name=kk)
-        print kk, pp.shape
+        print(kk, pp.shape)
     return tparams
 
 
@@ -808,19 +808,19 @@ def train(
     with open(dictionary[0], 'rb') as f:
         worddicts = pkl.load(f)
 
-    print 'Loading knowledge base ...'
+    print('Loading knowledge base ...')
     with open(kb_dicts[0], 'rb') as f:
         kb_dict = pkl.load(f)
 
     # reload options
     if reload_ and os.path.exists(saveto):
-        print 'Reload options'
+        print('Reload options')
         with open('%s.pkl' % saveto, 'rb') as f:
             model_options = pkl.load(f)
 
     logger.debug(pprint.pformat(model_options))
 
-    print 'Loading data'
+    print('Loading data')
     train = TextIterator(datasets[0], datasets[1], datasets[2], datasets[3], datasets[4],
                          dictionary[0], dictionary[1],
                          n_words=n_words,
@@ -847,11 +847,11 @@ def train(
 
     # Initialize (or reload) the parameters using 'model_options'
     # then build the Theano graph
-    print 'Building model'
+    print('Building model')
     params = init_params(model_options, worddicts)
     # reload parameters
     if reload_ and os.path.exists(saveto):
-        print 'Reload parameters'
+        print('Reload parameters')
         params = load_params(saveto, params)
 
     # numpy arrays -> theano shared variables
@@ -867,9 +867,9 @@ def train(
     inps = [x1, x1_mask, x1_kb, x2, x2_mask, x2_kb, kb_att, y]
 
     # before any regularizer
-    print 'Building f_log_probs...',
+    print('Building f_log_probs...'),
     f_log_probs = theano.function(inps, cost, profile=profile)
-    print 'Done'
+    print('Done')
 
     cost = cost.mean()
 
@@ -883,13 +883,13 @@ def train(
         cost += weight_decay
 
     # after all regularizers - compile the computational graph for cost
-    print 'Building f_cost...',
+    print('Building f_cost...'),
     f_cost = theano.function(inps, cost, profile=profile)
-    print 'Done'
+    print('Done')
 
-    print 'Computing gradient...',
+    print('Computing gradient...'),
     grads = tensor.grad(cost, wrt=itemlist(tparams))
-    print 'Done'
+    print('Done')
 
     # apply gradient clipping here
     if clip_c > 0.:
@@ -903,22 +903,22 @@ def train(
                                            g))
         grads = new_grads
         if verbose:
-            print 'Building function of gradient\'s norm'
+            print('Building function of gradient\'s norm')
             f_norm_g = theano.function(inps, tensor.sqrt(g2))
 
 
     # compile the optimizer, the actual computational graph is compiled here
     lr = tensor.scalar(name='lr')
-    print 'Building optimizers...',
+    print('Building optimizers...'),
     f_grad_shared, f_update = eval(optimizer)(lr, tparams, grads, inps, cost)
-    print 'Done'
+    print('Done')
 
-    print 'Optimization'
+    print('Optimization')
 
     history_errs = []
     # reload history
     if reload_ and os.path.exists(saveto):
-        print 'Reload history error'
+        print('Reload history error')
         history_errs = list(numpy.load(saveto)['history_errs'])
     best_p = None
     bad_counter = 0
@@ -945,7 +945,7 @@ def train(
             x1, x1_mask, x1_kb, x2, x2_mask, x2_kb, kb_att, y = prepare_data(x1, x2, x1_lemma, x2_lemma, y, model_options, kb_dict, maxlen=maxlen)
 
             if x1 is None:
-                print 'Minibatch with zero sample under length ', maxlen
+                print('Minibatch with zero sample under length '), maxlen
                 uidx -= 1
                 continue
 
@@ -963,7 +963,7 @@ def train(
             # check for bad numbers, usually we remove non-finite elements
             # and continue training - but not done here
             if numpy.isnan(cost) or numpy.isinf(cost):
-                print 'NaN detected'
+                print('NaN detected')
                 return None
 
             # verbose
@@ -975,14 +975,14 @@ def train(
 
             # save the best model so far
             if numpy.mod(uidx, saveFreq) == 0:
-                print 'Saving...',
+                print('Saving...'),
                 if best_p is not None:
                     params = best_p
                 else:
                     params = unzip(tparams)
                 numpy.savez(saveto, history_errs=history_errs, **params)
                 pkl.dump(model_options, open('%s.pkl' % saveto, 'wb'))
-                print 'Done'
+                print('Done')
 
             # validate model on validation set and early stop if necessary
             if numpy.mod(uidx, validFreq) == 0:
@@ -994,11 +994,11 @@ def train(
                 test_cost = pred_probs(f_log_probs, prepare_data, model_options, test, kb_dict).mean()
                 test_acc = pred_acc(f_pred, prepare_data, model_options, test, kb_dict)
 
-                print 'Valid cost', valid_cost
-                print 'Valid accuracy', valid_acc
-                print 'Test cost', test_cost
-                print 'Test accuracy', test_acc
-                print 'lrate:', lrate
+                print('Valid cost', valid_cost)
+                print('Valid accuracy', valid_acc)
+                print('Test cost', test_cost)
+                print('Test accuracy', test_acc)
+                print('lrate:', lrate)
 
                 valid_acc_record.append(valid_acc)
                 test_acc_record.append(test_acc)
@@ -1012,17 +1012,17 @@ def train(
                     wait_counter += 1
             
                 if wait_counter >= wait_N:
-                    print 'wait_counter max, need to half the lr'
+                    print('wait_counter max, need to half the lr')
                     bad_counter += 1
                     wait_counter = 0
-                    print 'bad_counter: '+str(bad_counter)
+                    print('bad_counter: '+str(bad_counter))
                     lrate=lrate*0.5
                     lr_change_list.append(eidx)
-                    print 'lrate change to: ' + str(lrate)
+                    print('lrate change to: ' + str(lrate))
                     zipp(best_p, tparams)
 
                 if bad_counter > patience:
-                        print 'Early Stop!'
+                        print('Early Stop!')
                         estop = True
                         break
 
@@ -1031,11 +1031,11 @@ def train(
 
             # finish after this many updates
             if uidx >= finish_after:
-                print 'Finishing after %d iterations!' % uidx
+                print('Finishing after %d iterations!' % uidx)
                 estop = True
                 break
 
-        print 'Seen %d samples' % n_samples
+        print('Seen %d samples' % n_samples)
 
         if estop:
             break
@@ -1045,21 +1045,21 @@ def train(
 
     use_noise.set_value(0.)
 
-    print '=' * 80
-    print 'Final Result'
-    print '=' * 80
+    print('=' * 80)
+    print('Final Result')
+    print('=' * 80)
     train_cost = pred_probs(f_log_probs, prepare_data, model_options, train_valid, kb_dict).mean()
     train_acc = pred_acc(f_pred, prepare_data, model_options, train_valid, kb_dict)
-    print 'Train cost', train_cost
-    print 'Train accuracy', train_acc
+    print('Train cost', train_cost)
+    print('Train accuracy', train_acc)
     valid_cost = pred_probs(f_log_probs, prepare_data, model_options, valid, kb_dict).mean()
     valid_acc = pred_acc(f_pred, prepare_data, model_options, valid, kb_dict)
-    print 'Valid cost', valid_cost
-    print 'Valid accuracy', valid_acc
+    print('Valid cost', valid_cost)
+    print('Valid accuracy', valid_acc)
     test_cost = pred_probs(f_log_probs, prepare_data, model_options, test, kb_dict).mean()
     test_acc = pred_acc(f_pred, prepare_data, model_options, test, kb_dict)
-    print 'Test cost', test_cost
-    print 'Test accuracy', test_acc
+    print('Test cost', test_cost)
+    print('Test accuracy', test_acc)
     params = copy.copy(best_p)
     numpy.savez(saveto, zipped_params=best_p, history_errs=history_errs, **params)
 
